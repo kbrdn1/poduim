@@ -11,7 +11,7 @@ Application web de gestion de tournois de baby-foot. Créez des tournois, ajoute
 ```bash
 # 1. Cloner et configurer l'environnement
 git clone <repository-url>
-cd foosball-tournament
+cd poduim
 make setup
 
 # 2. Installer les dépendances
