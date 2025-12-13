@@ -1,8 +1,8 @@
 import { db } from "./index";
 import { tournaments, teams, matches, users, tournamentSubscriptions } from "./schema";
 
-const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "TestAdmin123!";
-const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD || "TestUser123!";
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || "@Admin123";
+const SEED_USER_PASSWORD = process.env.SEED_USER_PASSWORD || "@User123";
 
 interface UserData {
   email: string;
@@ -13,8 +13,7 @@ interface UserData {
 }
 
 const adminUsers: UserData[] = [
-  { email: "admin1@test.com", username: "alice_admin", firstName: "Alice", lastName: "Admin", role: "admin" },
-  { email: "admin2@test.com", username: "bob_admin", firstName: "Bob", lastName: "Admin", role: "admin" },
+  { email: "admin@test.com", username: "admin", firstName: "Admin", lastName: "User", role: "admin" },
 ];
 
 const viewerUsers: UserData[] = [
