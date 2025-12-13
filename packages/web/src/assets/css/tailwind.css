@@ -37,6 +37,10 @@
     @apply inline-block h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-primary-600;
   }
 
+  .spinner-sm {
+    @apply h-4 w-4;
+  }
+
   .spinner-lg {
     @apply h-8 w-8 border-[3px];
   }
