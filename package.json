@@ -1,0 +1,15 @@
+{
+  "name": "poduim",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev": "bun run --parallel dev:api dev:web",
+    "dev:api": "bun run --cwd packages/api dev",
+    "dev:web": "bun run --cwd packages/web dev",
+    "build": "bun run --parallel build:api build:web",
+    "test": "bun run --parallel test:api test:web",
+    "db:push": "bun run --cwd packages/api db:push",
+    "db:seed": "bun run --cwd packages/api db:seed"
+  }
+}
