@@ -13,20 +13,20 @@ interface UserData {
 }
 
 const adminUsers: UserData[] = [
-  { email: "admin@test.com", username: "admin", firstName: "Admin", lastName: "User", role: "admin" },
+  { email: "admin@poduim.io", username: "admin", firstName: "Admin", lastName: "User", role: "admin" },
 ];
 
 const viewerUsers: UserData[] = [
-  { email: "user1@test.com", username: "charlie", firstName: "Charlie", lastName: "User", role: "viewer" },
-  { email: "user2@test.com", username: "diana", firstName: "Diana", lastName: "User", role: "viewer" },
-  { email: "user3@test.com", username: "ethan", firstName: "Ethan", lastName: "User", role: "viewer" },
-  { email: "user4@test.com", username: "fiona", firstName: "Fiona", lastName: "User", role: "viewer" },
-  { email: "user5@test.com", username: "george", firstName: "George", lastName: "User", role: "viewer" },
-  { email: "user6@test.com", username: "hannah", firstName: "Hannah", lastName: "User", role: "viewer" },
-  { email: "user7@test.com", username: "ivan", firstName: "Ivan", lastName: "User", role: "viewer" },
-  { email: "user8@test.com", username: "julia", firstName: "Julia", lastName: "User", role: "viewer" },
-  { email: "user9@test.com", username: "kevin", firstName: "Kevin", lastName: "User", role: "viewer" },
-  { email: "user10@test.com", username: "laura", firstName: "Laura", lastName: "User", role: "viewer" },
+  { email: "user1@poduim.io", username: "charlie", firstName: "Charlie", lastName: "User", role: "viewer" },
+  { email: "user2@poduim.io", username: "diana", firstName: "Diana", lastName: "User", role: "viewer" },
+  { email: "user3@poduim.io", username: "ethan", firstName: "Ethan", lastName: "User", role: "viewer" },
+  { email: "user4@poduim.io", username: "fiona", firstName: "Fiona", lastName: "User", role: "viewer" },
+  { email: "user5@poduim.io", username: "george", firstName: "George", lastName: "User", role: "viewer" },
+  { email: "user6@poduim.io", username: "hannah", firstName: "Hannah", lastName: "User", role: "viewer" },
+  { email: "user7@poduim.io", username: "ivan", firstName: "Ivan", lastName: "User", role: "viewer" },
+  { email: "user8@poduim.io", username: "julia", firstName: "Julia", lastName: "User", role: "viewer" },
+  { email: "user9@poduim.io", username: "kevin", firstName: "Kevin", lastName: "User", role: "viewer" },
+  { email: "user10@poduim.io", username: "laura", firstName: "Laura", lastName: "User", role: "viewer" },
 ];
 
 function generateId(): string {
