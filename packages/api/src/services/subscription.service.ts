@@ -84,7 +84,7 @@ export const subscriptionService = {
       id: subscriptionId,
       tournamentId,
       tournamentName: tournament.name,
-      tournamentStatus: tournament.status!,
+      tournamentStatus: tournament.status ?? "draft",
       tournamentDate: tournament.date,
       notifyOnMatch: data.notifyOnMatch,
       notifyOnResult: data.notifyOnResult,
@@ -111,18 +111,24 @@ export const subscriptionService = {
       await subscriptionRepository.update(subscription.id, updateData);
     }
 
-    const tournament = await tournamentRepository.findById(tournamentId);
-    const updatedSubscription = await subscriptionRepository.findById(subscription.id);
+    const [tournament, updatedSubscription] = await Promise.all([
+      tournamentRepository.findById(tournamentId),
+      subscriptionRepository.findById(subscription.id),
+    ]);
+
+    if (!tournament || !updatedSubscription) {
+      return { error: { code: "NOT_FOUND", message: "Data inconsistency detected" } };
+    }
 
     return {
-      id: updatedSubscription!.id,
-      tournamentId: updatedSubscription!.tournamentId,
-      tournamentName: tournament!.name,
-      tournamentStatus: tournament!.status!,
-      tournamentDate: tournament!.date,
-      notifyOnMatch: updatedSubscription!.notifyOnMatch,
-      notifyOnResult: updatedSubscription!.notifyOnResult,
-      subscribedAt: updatedSubscription!.createdAt,
+      id: updatedSubscription.id,
+      tournamentId: updatedSubscription.tournamentId,
+      tournamentName: tournament.name,
+      tournamentStatus: tournament.status ?? "draft",
+      tournamentDate: tournament.date,
+      notifyOnMatch: updatedSubscription.notifyOnMatch,
+      notifyOnResult: updatedSubscription.notifyOnResult,
+      subscribedAt: updatedSubscription.createdAt,
     };
   },
 

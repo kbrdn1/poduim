@@ -111,7 +111,10 @@ export const userService = {
     await userRepository.update(id, data);
 
     const updatedUser = await userRepository.findByIdWithoutPassword(id);
-    return updatedUser!;
+    if (!updatedUser) {
+      return { error: { code: "NOT_FOUND", message: "Failed to retrieve updated user" } };
+    }
+    return updatedUser;
   },
 
   async delete(id: string, currentUserId: string): Promise<{ success: true } | { error: UserError }> {

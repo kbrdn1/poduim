@@ -99,7 +99,11 @@ export const tournamentService = {
       updatedAt: now,
     });
 
-    return (await tournamentRepository.findById(id))!;
+    const createdTournament = await tournamentRepository.findById(id);
+    if (!createdTournament) {
+      throw new Error("Failed to create tournament");
+    }
+    return createdTournament;
   },
 
   async update(id: string, data: UpdateTournamentData): Promise<Tournament | { error: TournamentError }> {
@@ -118,7 +122,11 @@ export const tournamentService = {
 
     await tournamentRepository.update(id, updateData);
 
-    return (await tournamentRepository.findById(id))!;
+    const updatedTournament = await tournamentRepository.findById(id);
+    if (!updatedTournament) {
+      return { error: { code: "NOT_FOUND", message: "Failed to retrieve updated tournament" } };
+    }
+    return updatedTournament;
   },
 
   async delete(id: string): Promise<{ success: true } | { error: TournamentError }> {

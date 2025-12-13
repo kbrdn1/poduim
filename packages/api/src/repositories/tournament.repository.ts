@@ -76,9 +76,11 @@ export const tournamentRepository = {
   },
 
   async deleteWithRelations(id: string): Promise<void> {
-    await db.delete(matches).where(eq(matches.tournamentId, id));
-    await db.delete(teams).where(eq(teams.tournamentId, id));
-    await db.delete(tournaments).where(eq(tournaments.id, id));
+    await db.transaction(async (tx) => {
+      await tx.delete(matches).where(eq(matches.tournamentId, id));
+      await tx.delete(teams).where(eq(teams.tournamentId, id));
+      await tx.delete(tournaments).where(eq(tournaments.id, id));
+    });
   },
 
   async updateStatus(id: string, status: TournamentStatus): Promise<void> {

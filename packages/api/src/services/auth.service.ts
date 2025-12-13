@@ -113,16 +113,16 @@ export const authService = {
 
     await userRepository.updateLastLogin(user.id);
 
-    const token = await this.generateToken(user.id, user.email, user.role!);
+    const token = await this.generateToken(user.id, user.email, user.role ?? "viewer");
 
     return {
       user: {
         id: user.id,
         email: user.email,
-        username: user.username!,
+        username: user.username ?? "",
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role!,
+        role: user.role ?? "viewer",
       },
       token,
       expiresIn: JWT_EXPIRES_IN,
@@ -151,13 +151,17 @@ export const authService = {
 
     const updatedUser = await userRepository.findByIdWithoutPassword(userId);
 
+    if (!updatedUser) {
+      return { error: { code: "USER_NOT_FOUND", message: "Failed to retrieve updated user" } };
+    }
+
     return {
-      id: updatedUser!.id,
-      email: updatedUser!.email,
-      username: updatedUser!.username!,
-      firstName: updatedUser!.firstName,
-      lastName: updatedUser!.lastName,
-      role: updatedUser!.role!,
+      id: updatedUser.id,
+      email: updatedUser.email,
+      username: updatedUser.username ?? "",
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      role: updatedUser.role ?? "viewer",
     };
   },
 

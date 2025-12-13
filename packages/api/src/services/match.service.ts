@@ -104,7 +104,11 @@ export const matchService = {
       updatedAt: now,
     });
 
-    return (await matchRepository.findById(id))!;
+    const createdMatch = await matchRepository.findById(id);
+    if (!createdMatch) {
+      return { error: { code: "NOT_FOUND", message: "Failed to create match" } };
+    }
+    return createdMatch;
   },
 
   async generateRoundRobin(tournamentId: string): Promise<GenerateMatchesResult | { error: MatchError }> {
@@ -190,7 +194,11 @@ export const matchService = {
 
     await matchRepository.update(id, updateData);
 
-    return (await matchRepository.findById(id))!;
+    const updatedMatch = await matchRepository.findById(id);
+    if (!updatedMatch) {
+      return { error: { code: "NOT_FOUND", message: "Failed to update match" } };
+    }
+    return updatedMatch;
   },
 
   async updateScore(id: string, homeScore: number, awayScore: number): Promise<Match | { error: MatchError }> {
@@ -212,7 +220,11 @@ export const matchService = {
       await tournamentRepository.updateStatus(existing.tournamentId, "completed");
     }
 
-    return (await matchRepository.findById(id))!;
+    const updatedMatch = await matchRepository.findById(id);
+    if (!updatedMatch) {
+      return { error: { code: "NOT_FOUND", message: "Failed to update match score" } };
+    }
+    return updatedMatch;
   },
 
   async delete(id: string): Promise<{ success: true } | { error: MatchError }> {
