@@ -1,57 +1,19 @@
 import type {
-  Tournament,
-  Team,
-  Match,
+  TournamentResponse,
+  TeamResponse,
+  MatchResponse,
   ApiResponse,
   PaginatedResponse,
+  TournamentWithDetailsResponse,
+  TeamRanking,
+  MatchWithTeamsResponse,
 } from "@poduim/shared/types";
-
-export interface MatchWithTeams extends Match {
-  homeTeam: Team | null;
-  awayTeam: Team | null;
-}
-
-export interface TournamentWithDetails extends Tournament {
-  teams: Team[];
-  matches: Match[];
-  ranking: TeamRanking[];
-}
-
-export interface TeamRanking {
-  teamId: string;
-  teamName: string;
-  played: number;
-  won: number;
-  drawn: number;
-  lost: number;
-  goalsFor: number;
-  goalsAgainst: number;
-  goalDifference: number;
-  points: number;
-}
-
-export interface CreateTournamentDTO {
-  name: string;
-  description?: string;
-  date: string;
-}
-
-export interface UpdateTournamentDTO {
-  name?: string;
-  description?: string;
-  date?: string;
-  status?: string;
-}
-
-export interface CreateTeamDTO {
-  name: string;
-  tournamentId: string;
-}
-
-export interface UpdateMatchScoreDTO {
-  homeScore: number;
-  awayScore: number;
-}
+import type {
+  CreateTournament,
+  UpdateTournament,
+  CreateTeam,
+  UpdateMatchScore,
+} from "@poduim/shared/validators";
 
 export function useApi() {
   const config = useRuntimeConfig();
@@ -69,26 +31,26 @@ export function useApi() {
 
   const tournaments = {
     list: (params?: { page?: number; limit?: number; status?: string; search?: string }) =>
-      $api<PaginatedResponse<Tournament>>("/tournaments", { query: params }),
+      $api<PaginatedResponse<TournamentResponse>>("/tournaments", { query: params }),
 
-    get: (id: string) => $api<ApiResponse<Tournament>>(`/tournaments/${id}`),
+    get: (id: string) => $api<ApiResponse<TournamentResponse>>(`/tournaments/${id}`),
 
     getDetails: (id: string) =>
-      $api<ApiResponse<TournamentWithDetails>>(`/tournaments/${id}/details`),
+      $api<ApiResponse<TournamentWithDetailsResponse>>(`/tournaments/${id}/details`),
 
     getRanking: (id: string) =>
       $api<ApiResponse<{ tournamentId: string; rankings: TeamRanking[]; updatedAt: string }>>(
         `/tournaments/${id}/ranking`
       ),
 
-    create: (data: CreateTournamentDTO) =>
-      $api<ApiResponse<Tournament>>("/tournaments", {
+    create: (data: CreateTournament) =>
+      $api<ApiResponse<TournamentResponse>>("/tournaments", {
         method: "POST",
         body: data,
       }),
 
-    update: (id: string, data: UpdateTournamentDTO) =>
-      $api<ApiResponse<Tournament>>(`/tournaments/${id}`, {
+    update: (id: string, data: Partial<UpdateTournament>) =>
+      $api<ApiResponse<TournamentResponse>>(`/tournaments/${id}`, {
         method: "PATCH",
         body: data,
       }),
@@ -101,20 +63,20 @@ export function useApi() {
 
   const teams = {
     list: (tournamentId?: string) =>
-      $api<ApiResponse<Team[]>>("/teams", {
+      $api<ApiResponse<TeamResponse[]>>("/teams", {
         query: tournamentId ? { tournamentId } : undefined,
       }),
 
-    get: (id: string) => $api<ApiResponse<Team>>(`/teams/${id}`),
+    get: (id: string) => $api<ApiResponse<TeamResponse>>(`/teams/${id}`),
 
-    create: (data: CreateTeamDTO) =>
-      $api<ApiResponse<Team>>("/teams", {
+    create: (data: CreateTeam) =>
+      $api<ApiResponse<TeamResponse>>("/teams", {
         method: "POST",
         body: data,
       }),
 
     update: (id: string, data: { name: string }) =>
-      $api<ApiResponse<Team>>(`/teams/${id}`, {
+      $api<ApiResponse<TeamResponse>>(`/teams/${id}`, {
         method: "PATCH",
         body: data,
       }),
@@ -127,21 +89,21 @@ export function useApi() {
 
   const matches = {
     list: (params?: { tournamentId?: string; status?: string }) =>
-      $api<ApiResponse<Match[]>>("/matches", { query: params }),
+      $api<ApiResponse<MatchResponse[]>>("/matches", { query: params }),
 
-    get: (id: string) => $api<ApiResponse<MatchWithTeams>>(`/matches/${id}`),
+    get: (id: string) => $api<ApiResponse<MatchWithTeamsResponse>>(`/matches/${id}`),
 
     generate: (tournamentId: string) =>
       $api<
-        ApiResponse<Match[]> & {
+        ApiResponse<MatchResponse[]> & {
           summary: { totalMatches: number; totalTeams: number; totalRounds: number };
         }
       >(`/matches/generate/${tournamentId}`, {
         method: "POST",
       }),
 
-    updateScore: (id: string, data: UpdateMatchScoreDTO) =>
-      $api<ApiResponse<Match>>(`/matches/${id}/score`, {
+    updateScore: (id: string, data: UpdateMatchScore) =>
+      $api<ApiResponse<MatchResponse>>(`/matches/${id}/score`, {
         method: "PUT",
         body: data,
       }),

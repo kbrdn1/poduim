@@ -1,24 +1,11 @@
-import type { User } from "~/stores/auth";
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  error?: {
-    code: string;
-    message: string;
-  };
-}
-
-interface AuthResponse {
-  user: User;
-  token: string;
-  expiresIn: number;
-}
-
-interface LoginDTO {
-  email: string;
-  password: string;
-}
+import type {
+  AuthUser,
+  AuthResult,
+  ApiResponse,
+  UserStats,
+  SubscriptionResponse,
+  SubscriptionStatus,
+} from "@poduim/shared/types";
 
 interface RegisterDTO {
   email: string;
@@ -26,6 +13,12 @@ interface RegisterDTO {
   username: string;
   firstName?: string;
   lastName?: string;
+  acceptTerms: boolean;
+}
+
+interface LoginDTO {
+  email: string;
+  password: string;
 }
 
 interface UpdateProfileDTO {
@@ -37,22 +30,6 @@ interface UpdateProfileDTO {
 interface ChangePasswordDTO {
   currentPassword: string;
   newPassword: string;
-}
-
-interface Subscription {
-  id: string;
-  tournamentId: string;
-  tournamentName?: string;
-  tournamentStatus?: string;
-  tournamentDate?: string;
-  notifyOnMatch: boolean;
-  notifyOnResult: boolean;
-  subscribedAt: string;
-}
-
-interface SubscriptionStatus {
-  isSubscribed: boolean;
-  subscription: Subscription | null;
 }
 
 export function useAuthApi() {
@@ -83,21 +60,21 @@ export function useAuthApi() {
 
   const auth = {
     login: (data: LoginDTO) =>
-      $authApi<ApiResponse<AuthResponse>>("/auth/login", {
+      $authApi<ApiResponse<AuthResult>>("/auth/login", {
         method: "POST",
         body: data,
       }),
 
     register: (data: RegisterDTO) =>
-      $authApi<ApiResponse<AuthResponse>>("/auth/register", {
+      $authApi<ApiResponse<AuthResult>>("/auth/register", {
         method: "POST",
         body: data,
       }),
 
-    me: () => $authApi<ApiResponse<{ user: User }>>("/auth/me"),
+    me: () => $authApi<ApiResponse<{ user: AuthUser }>>("/auth/me"),
 
     updateProfile: (data: UpdateProfileDTO) =>
-      $authApi<ApiResponse<{ user: User }>>("/auth/me", {
+      $authApi<ApiResponse<{ user: AuthUser }>>("/auth/me", {
         method: "PUT",
         body: data,
       }),
@@ -112,12 +89,14 @@ export function useAuthApi() {
       $authApi<ApiResponse<{ token: string; expiresIn: number }>>("/auth/refresh", {
         method: "POST",
       }),
+
+    stats: () => $authApi<ApiResponse<UserStats>>("/auth/stats"),
   };
 
   const subscriptions = {
     list: (params?: { page?: number; limit?: number }) =>
       $authApi<
-        ApiResponse<Subscription[]> & {
+        ApiResponse<SubscriptionResponse[]> & {
           pagination: { page: number; limit: number; total: number; totalPages: number };
         }
       >("/subscriptions", { query: params }),
@@ -129,7 +108,7 @@ export function useAuthApi() {
       tournamentId: string,
       options?: { notifyOnMatch?: boolean; notifyOnResult?: boolean }
     ) =>
-      $authApi<ApiResponse<Subscription>>(`/subscriptions/${tournamentId}`, {
+      $authApi<ApiResponse<SubscriptionResponse>>(`/subscriptions/${tournamentId}`, {
         method: "POST",
         body: options || {},
       }),
@@ -138,7 +117,7 @@ export function useAuthApi() {
       tournamentId: string,
       options: { notifyOnMatch?: boolean; notifyOnResult?: boolean }
     ) =>
-      $authApi<ApiResponse<Subscription>>(`/subscriptions/${tournamentId}`, {
+      $authApi<ApiResponse<SubscriptionResponse>>(`/subscriptions/${tournamentId}`, {
         method: "PUT",
         body: options,
       }),
