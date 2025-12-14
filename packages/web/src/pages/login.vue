@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import type { FetchError } from "@poduim/shared/types";
+import { AUTH_FEATURES_LOGIN } from "~/constants/auth";
+
 definePageMeta({
   title: "Connexion",
+  layout: "auth",
 });
 
 const authStore = useAuthStore();
@@ -38,9 +42,9 @@ async function handleSubmit() {
     } else {
       errors.general = response.error?.message || "Erreur de connexion";
     }
-  } catch (error: unknown) {
-    const fetchError = error as { data?: { error?: { message?: string } } };
-    errors.general = fetchError?.data?.error?.message || "Erreur de connexion";
+  } catch (error) {
+    const err = error as FetchError;
+    errors.general = err?.data?.error?.message || "Erreur de connexion";
   } finally {
     isLoading.value = false;
   }
@@ -48,65 +52,91 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="flex min-h-[80vh] items-center justify-center px-4">
-    <div class="w-full max-w-md">
-      <div class="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div class="mb-6 text-center">
-          <div class="mb-2 flex justify-center">
-            <Icon name="lucide:trophy" class="h-12 w-12 text-primary-600" />
-          </div>
-          <h1 class="text-2xl font-bold text-slate-900">Connexion</h1>
-          <p class="mt-1 text-sm text-slate-500">Connectez-vous à votre compte</p>
+  <div class="flex min-h-screen">
+    <AuthBranding
+      title="Gérez vos tournois<br />en toute simplicité"
+      subtitle="Créez, organisez et suivez vos compétitions de baby-foot avec une interface intuitive."
+      :features="AUTH_FEATURES_LOGIN"
+    />
+
+    <!-- Right Side - Form -->
+    <div class="flex w-full items-center justify-center px-4 lg:w-1/2">
+      <div class="w-full max-w-md">
+        <AuthMobileLogo class="mb-8" />
+
+        <!-- Back Link (Desktop) -->
+        <NuxtLink
+          to="/"
+          class="mb-8 hidden items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-900 lg:inline-flex"
+        >
+          <Icon name="lucide:arrow-left" class="h-4 w-4" />
+          Retour à l'accueil
+        </NuxtLink>
+
+        <div class="space-y-2">
+          <h1 class="text-3xl font-bold text-slate-900">Connexion</h1>
+          <p class="text-slate-600">Bienvenue ! Connectez-vous à votre compte.</p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-4">
+        <form class="mt-8 space-y-5" @submit.prevent="handleSubmit">
           <div
             v-if="errors.general"
-            class="rounded-lg bg-danger-50 p-3 text-sm text-danger-600"
+            class="flex items-center gap-3 rounded-xl bg-danger-50 p-4 text-sm text-danger-700"
           >
+            <Icon name="lucide:alert-circle" class="h-5 w-5 shrink-0" />
             {{ errors.general }}
           </div>
 
-          <div>
-            <label for="email" class="mb-1 block text-sm font-medium text-slate-700">
-              Email <span class="text-danger-500">*</span>
+          <div class="space-y-2">
+            <label for="email" class="block text-sm font-medium text-slate-700">
+              Adresse email
             </label>
-            <input
-              id="email"
-              v-model="form.email"
-              type="email"
-              placeholder="votre@email.com"
-              :disabled="isLoading"
-              :class="[
-                'w-full rounded-lg border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
-                errors.email
-                  ? 'border-danger-300 bg-danger-50'
-                  : 'border-slate-300 bg-white hover:border-slate-400',
-              ]"
-            />
-            <p v-if="errors.email" class="mt-1 text-sm text-danger-600">
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <Icon name="lucide:mail" class="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                id="email"
+                v-model="form.email"
+                type="email"
+                placeholder="votre@email.com"
+                :disabled="isLoading"
+                :class="[
+                  'w-full rounded-xl border py-3 pl-12 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500',
+                  errors.email
+                    ? 'border-danger-300 bg-danger-50'
+                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 focus:border-primary-300 focus:bg-white',
+                ]"
+              />
+            </div>
+            <p v-if="errors.email" class="text-sm text-danger-600">
               {{ errors.email }}
             </p>
           </div>
 
-          <div>
-            <label for="password" class="mb-1 block text-sm font-medium text-slate-700">
-              Mot de passe <span class="text-danger-500">*</span>
+          <div class="space-y-2">
+            <label for="password" class="block text-sm font-medium text-slate-700">
+              Mot de passe
             </label>
-            <input
-              id="password"
-              v-model="form.password"
-              type="password"
-              placeholder="••••••••"
-              :disabled="isLoading"
-              :class="[
-                'w-full rounded-lg border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500',
-                errors.password
-                  ? 'border-danger-300 bg-danger-50'
-                  : 'border-slate-300 bg-white hover:border-slate-400',
-              ]"
-            />
-            <p v-if="errors.password" class="mt-1 text-sm text-danger-600">
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <Icon name="lucide:lock" class="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                id="password"
+                v-model="form.password"
+                type="password"
+                placeholder="••••••••"
+                :disabled="isLoading"
+                :class="[
+                  'w-full rounded-xl border py-3 pl-12 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500',
+                  errors.password
+                    ? 'border-danger-300 bg-danger-50'
+                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 focus:border-primary-300 focus:bg-white',
+                ]"
+              />
+            </div>
+            <p v-if="errors.password" class="text-sm text-danger-600">
               {{ errors.password }}
             </p>
           </div>
@@ -114,23 +144,34 @@ async function handleSubmit() {
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+            class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-3.5 text-sm font-medium text-white shadow-lg shadow-primary-500/25 transition-all hover:bg-primary-700 hover:shadow-xl hover:shadow-primary-500/30 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span v-if="isLoading" class="flex items-center justify-center gap-2">
-              <span class="spinner spinner-sm" />
-              Connexion...
-            </span>
-            <span v-else>Se connecter</span>
+            <Spinner v-if="isLoading" size="sm" class="text-white" />
+            <span>{{ isLoading ? "Connexion en cours..." : "Se connecter" }}</span>
+            <Icon v-if="!isLoading" name="lucide:arrow-right" class="h-4 w-4" />
           </button>
         </form>
 
-        <div class="mt-6 text-center text-sm text-slate-500">
-          Pas encore de compte ?
+        <div class="mt-8 text-center">
+          <p class="text-sm text-slate-600">
+            Pas encore de compte ?
+            <NuxtLink
+              to="/register"
+              class="font-semibold text-primary-600 hover:text-primary-700"
+            >
+              Créer un compte gratuitement
+            </NuxtLink>
+          </p>
+        </div>
+
+        <!-- Mobile Back Link -->
+        <div class="mt-8 text-center lg:hidden">
           <NuxtLink
-            to="/register"
-            class="font-medium text-primary-600 hover:text-primary-500"
+            to="/"
+            class="inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-900"
           >
-            Créer un compte
+            <Icon name="lucide:arrow-left" class="h-4 w-4" />
+            Retour à l'accueil
           </NuxtLink>
         </div>
       </div>
