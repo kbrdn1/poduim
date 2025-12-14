@@ -47,13 +47,6 @@ interface MatchData {
   date: Date;
 }
 
-interface LeagueData {
-  name: string;
-  description: string;
-  country: string;
-  teams: TeamData[];
-  matches: MatchData[];
-}
 
 const ligue1Teams: TeamData[] = [
   { name: "Paris Saint-Germain", city: "Paris" },
@@ -98,6 +91,8 @@ const laLigaTeams: TeamData[] = [
   { name: "Real Betis", city: "Sevilla" },
   { name: "Real Sociedad", city: "San Sebastián" },
   { name: "Osasuna", city: "Pamplona" },
+  { name: "Valencia", city: "Valencia" },
+  { name: "Valladolid", city: "Valladolid" },
 ];
 
 const laLigaMatches: MatchData[] = [
@@ -125,52 +120,103 @@ const premierLeagueMatches: MatchData[] = [
   { round: 2, homeTeam: "Manchester City", awayTeam: "Tottenham", homeScore: 4, awayScore: 1, date: new Date("2024-08-24") },
 ];
 
+type TournamentStatus = "draft" | "registration" | "in_progress" | "completed" | "cancelled";
+
+interface TournamentConfig {
+  name: string;
+  description: string;
+  status: TournamentStatus;
+  date: Date;
+  teams: TeamData[];
+  matches: MatchData[];
+}
+
 async function seed() {
   console.log("Starting database seeding...");
 
-  const leaguesData: LeagueData[] = [
+  // Clean up existing data (in reverse order of dependencies)
+  console.log("Cleaning up existing data...");
+  await db.delete(tournamentSubscriptions);
+  await db.delete(matches);
+  await db.delete(teams);
+  await db.delete(tournaments);
+  await db.delete(users);
+  console.log("Cleanup complete.");
+
+  // Tournaments with different statuses
+  const tournamentConfigs: TournamentConfig[] = [
     {
       name: "Ligue 1 McDonald's",
       description: "Championnat de France de football - Saison 2024-2025",
-      country: "France",
+      status: "in_progress",
+      date: new Date("2024-08-15"),
       teams: ligue1Teams,
       matches: ligue1Matches,
     },
     {
       name: "LaLiga EA Sports",
       description: "Championnat d'Espagne de football - Saison 2024-2025",
-      country: "Spain",
+      status: "completed",
+      date: new Date("2024-05-01"),
       teams: laLigaTeams,
       matches: laLigaMatches,
     },
     {
       name: "Premier League",
       description: "Championnat d'Angleterre de football - Saison 2024-2025",
-      country: "England",
+      status: "in_progress",
+      date: new Date("2024-08-17"),
       teams: premierLeagueTeams,
       matches: premierLeagueMatches,
     },
+    {
+      name: "Tournoi de Noël 2024",
+      description: "Tournoi amical de baby-foot pour les fêtes",
+      status: "draft",
+      date: new Date("2024-12-20"),
+      teams: [],
+      matches: [],
+    },
+    {
+      name: "Coupe de Printemps",
+      description: "Inscriptions ouvertes ! Venez participer au tournoi de printemps",
+      status: "registration",
+      date: new Date("2025-03-15"),
+      teams: [
+        { name: "Les Champions", city: "Paris" },
+        { name: "FC Winners", city: "Lyon" },
+        { name: "Dream Team", city: "Marseille" },
+      ],
+      matches: [],
+    },
+    {
+      name: "Tournoi Annulé 2024",
+      description: "Ce tournoi a été annulé en raison de circonstances imprévues",
+      status: "cancelled",
+      date: new Date("2024-06-01"),
+      teams: [],
+      matches: [],
+    },
   ];
 
-  for (const league of leaguesData) {
-    console.log(`Creating tournament: ${league.name}`);
+  for (const config of tournamentConfigs) {
+    console.log(`Creating tournament: ${config.name} (${config.status})`);
 
     const tournamentId = generateId();
-    const startDate = new Date("2024-08-15");
 
     await db.insert(tournaments).values({
       id: tournamentId,
-      name: league.name,
-      description: league.description,
-      date: startDate,
-      status: "in_progress",
+      name: config.name,
+      description: config.description,
+      date: config.date,
+      status: config.status,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
 
     const teamIdMap: Record<string, string> = {};
 
-    for (const team of league.teams) {
+    for (const team of config.teams) {
       const teamId = generateId();
       teamIdMap[team.name] = teamId;
 
@@ -183,10 +229,12 @@ async function seed() {
       });
     }
 
-    console.log(`  ${league.teams.length} teams created`);
+    if (config.teams.length > 0) {
+      console.log(`  ${config.teams.length} teams created`);
+    }
 
     let matchNumber = 0;
-    for (const match of league.matches) {
+    for (const match of config.matches) {
       matchNumber++;
       const matchId = generateId();
       const homeTeamId = teamIdMap[match.homeTeam];
@@ -214,7 +262,9 @@ async function seed() {
       });
     }
 
-    console.log(`  ${league.matches.length} matches created`);
+    if (config.matches.length > 0) {
+      console.log(`  ${config.matches.length} matches created`);
+    }
   }
 
   console.log("Creating users...");

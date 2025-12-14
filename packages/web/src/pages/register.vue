@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import type { FetchError } from "@poduim/shared/types";
+import { AUTH_FEATURES_REGISTER } from "~/constants/auth";
+
 definePageMeta({
   title: "Inscription",
+  layout: "auth",
 });
 
 const authStore = useAuthStore();
@@ -13,6 +17,7 @@ const form = reactive({
   confirmPassword: "",
   firstName: "",
   lastName: "",
+  acceptTerms: false,
 });
 
 const errors = reactive<{
@@ -20,6 +25,7 @@ const errors = reactive<{
   username?: string;
   password?: string;
   confirmPassword?: string;
+  acceptTerms?: string;
   general?: string;
 }>({});
 
@@ -32,6 +38,7 @@ function validateForm(): boolean {
   errors.username = undefined;
   errors.password = undefined;
   errors.confirmPassword = undefined;
+  errors.acceptTerms = undefined;
   errors.general = undefined;
 
   if (!form.email) {
@@ -75,6 +82,11 @@ function validateForm(): boolean {
     isValid = false;
   }
 
+  if (!form.acceptTerms) {
+    errors.acceptTerms = "Vous devez accepter les conditions générales d'utilisation";
+    isValid = false;
+  }
+
   return isValid;
 }
 
@@ -90,6 +102,7 @@ async function handleSubmit() {
       password: form.password,
       firstName: form.firstName || undefined,
       lastName: form.lastName || undefined,
+      acceptTerms: form.acceptTerms,
     });
 
     if (response.success) {
@@ -103,9 +116,9 @@ async function handleSubmit() {
         errors.general = response.error?.message || "Erreur lors de l'inscription";
       }
     }
-  } catch (error: unknown) {
-    const fetchError = error as { data?: { error?: { code?: string; message?: string } } };
-    const errorData = fetchError?.data?.error;
+  } catch (error) {
+    const err = error as FetchError;
+    const errorData = err?.data?.error;
     if (errorData?.code === "EMAIL_EXISTS") {
       errors.email = errorData.message;
     } else if (errorData?.code === "USERNAME_EXISTS") {
@@ -117,156 +130,248 @@ async function handleSubmit() {
     isLoading.value = false;
   }
 }
-
-const inputClass = (hasError?: string) => [
-  "w-full rounded-lg border px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500",
-  hasError
-    ? "border-danger-300 bg-danger-50"
-    : "border-slate-300 bg-white hover:border-slate-400",
-];
 </script>
 
 <template>
-  <div class="flex min-h-[80vh] items-center justify-center px-4 py-8">
-    <div class="w-full max-w-md">
-      <div class="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div class="mb-6 text-center">
-          <div class="mb-2 flex justify-center">
-            <Icon name="lucide:trophy" class="h-12 w-12 text-primary-600" />
-          </div>
-          <h1 class="text-2xl font-bold text-slate-900">Créer un compte</h1>
-          <p class="mt-1 text-sm text-slate-500">Rejoignez la communauté Poduim</p>
+  <div class="flex min-h-screen">
+    <AuthBranding
+      title="Rejoignez<br />la communauté"
+      subtitle="Créez votre compte et commencez à organiser vos tournois dès maintenant."
+      :features="AUTH_FEATURES_REGISTER"
+    />
+
+    <!-- Right Side - Form -->
+    <div class="flex w-full items-center justify-center overflow-y-auto px-4 py-8 lg:w-1/2">
+      <div class="w-full max-w-md">
+        <AuthMobileLogo class="mb-6" />
+
+        <!-- Back Link (Desktop) -->
+        <NuxtLink
+          to="/"
+          class="mb-6 hidden items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-900 lg:inline-flex"
+        >
+          <Icon name="lucide:arrow-left" class="h-4 w-4" />
+          Retour à l'accueil
+        </NuxtLink>
+
+        <div class="space-y-2">
+          <h1 class="text-3xl font-bold text-slate-900">Créer un compte</h1>
+          <p class="text-slate-600">Rejoignez la communauté Poduim gratuitement.</p>
         </div>
 
-        <form @submit.prevent="handleSubmit" class="space-y-4">
+        <form class="mt-6 space-y-4" @submit.prevent="handleSubmit">
           <div
             v-if="errors.general"
-            class="rounded-lg bg-danger-50 p-3 text-sm text-danger-600"
+            class="flex items-center gap-3 rounded-xl bg-danger-50 p-4 text-sm text-danger-700"
           >
+            <Icon name="lucide:alert-circle" class="h-5 w-5 shrink-0" />
             {{ errors.general }}
           </div>
 
           <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="firstName" class="mb-1 block text-sm font-medium text-slate-700">
+            <div class="space-y-2">
+              <label for="firstName" class="block text-sm font-medium text-slate-700">
                 Prénom
               </label>
-              <input
-                id="firstName"
-                v-model="form.firstName"
-                type="text"
-                placeholder="Jean"
-                :disabled="isLoading"
-                :class="inputClass()"
-              />
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <Icon name="lucide:user" class="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  id="firstName"
+                  v-model="form.firstName"
+                  type="text"
+                  placeholder="Jean"
+                  :disabled="isLoading"
+                  class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-sm transition-all hover:border-slate-300 focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
             </div>
 
-            <div>
-              <label for="lastName" class="mb-1 block text-sm font-medium text-slate-700">
+            <div class="space-y-2">
+              <label for="lastName" class="block text-sm font-medium text-slate-700">
                 Nom
               </label>
-              <input
-                id="lastName"
-                v-model="form.lastName"
-                type="text"
-                placeholder="Dupont"
-                :disabled="isLoading"
-                :class="inputClass()"
-              />
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                  <Icon name="lucide:user" class="h-5 w-5 text-slate-400" />
+                </div>
+                <input
+                  id="lastName"
+                  v-model="form.lastName"
+                  type="text"
+                  placeholder="Dupont"
+                  :disabled="isLoading"
+                  class="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-sm transition-all hover:border-slate-300 focus:border-primary-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
             </div>
           </div>
 
-          <div>
-            <label for="username" class="mb-1 block text-sm font-medium text-slate-700">
-              Nom d'utilisateur <span class="text-danger-500">*</span>
+          <div class="space-y-2">
+            <label for="username" class="block text-sm font-medium text-slate-700">
+              Nom d'utilisateur
             </label>
-            <input
-              id="username"
-              v-model="form.username"
-              type="text"
-              placeholder="jean_dupont"
-              :disabled="isLoading"
-              :class="inputClass(errors.username)"
-            />
-            <p v-if="errors.username" class="mt-1 text-sm text-danger-600">
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <Icon name="lucide:at-sign" class="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                id="username"
+                v-model="form.username"
+                type="text"
+                placeholder="jean_dupont"
+                :disabled="isLoading"
+                :class="[
+                  'w-full rounded-xl border py-3 pl-12 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500',
+                  errors.username
+                    ? 'border-danger-300 bg-danger-50'
+                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 focus:border-primary-300 focus:bg-white',
+                ]"
+              />
+            </div>
+            <p v-if="errors.username" class="text-sm text-danger-600">
               {{ errors.username }}
             </p>
           </div>
 
-          <div>
-            <label for="email" class="mb-1 block text-sm font-medium text-slate-700">
-              Email <span class="text-danger-500">*</span>
+          <div class="space-y-2">
+            <label for="email" class="block text-sm font-medium text-slate-700">
+              Adresse email
             </label>
-            <input
-              id="email"
-              v-model="form.email"
-              type="email"
-              placeholder="votre@email.com"
-              :disabled="isLoading"
-              :class="inputClass(errors.email)"
-            />
-            <p v-if="errors.email" class="mt-1 text-sm text-danger-600">
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <Icon name="lucide:mail" class="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                id="email"
+                v-model="form.email"
+                type="email"
+                placeholder="votre@email.com"
+                :disabled="isLoading"
+                :class="[
+                  'w-full rounded-xl border py-3 pl-12 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500',
+                  errors.email
+                    ? 'border-danger-300 bg-danger-50'
+                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 focus:border-primary-300 focus:bg-white',
+                ]"
+              />
+            </div>
+            <p v-if="errors.email" class="text-sm text-danger-600">
               {{ errors.email }}
             </p>
           </div>
 
-          <div>
-            <label for="password" class="mb-1 block text-sm font-medium text-slate-700">
-              Mot de passe <span class="text-danger-500">*</span>
+          <div class="space-y-2">
+            <label for="password" class="block text-sm font-medium text-slate-700">
+              Mot de passe
             </label>
-            <input
-              id="password"
-              v-model="form.password"
-              type="password"
-              placeholder="••••••••"
-              :disabled="isLoading"
-              :class="inputClass(errors.password)"
-            />
-            <p class="mt-1 text-xs text-slate-500">
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <Icon name="lucide:lock" class="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                id="password"
+                v-model="form.password"
+                type="password"
+                placeholder="••••••••"
+                :disabled="isLoading"
+                :class="[
+                  'w-full rounded-xl border py-3 pl-12 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500',
+                  errors.password
+                    ? 'border-danger-300 bg-danger-50'
+                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 focus:border-primary-300 focus:bg-white',
+                ]"
+              />
+            </div>
+            <p class="text-xs text-slate-500">
               Min. 8 caractères, 1 majuscule, 1 minuscule, 1 chiffre
             </p>
-            <p v-if="errors.password" class="mt-1 text-sm text-danger-600">
+            <p v-if="errors.password" class="text-sm text-danger-600">
               {{ errors.password }}
             </p>
           </div>
 
-          <div>
-            <label
-              for="confirmPassword"
-              class="mb-1 block text-sm font-medium text-slate-700"
-            >
-              Confirmer le mot de passe <span class="text-danger-500">*</span>
+          <div class="space-y-2">
+            <label for="confirmPassword" class="block text-sm font-medium text-slate-700">
+              Confirmer le mot de passe
             </label>
-            <input
-              id="confirmPassword"
-              v-model="form.confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              :disabled="isLoading"
-              :class="inputClass(errors.confirmPassword)"
-            />
-            <p v-if="errors.confirmPassword" class="mt-1 text-sm text-danger-600">
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <Icon name="lucide:lock" class="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                id="confirmPassword"
+                v-model="form.confirmPassword"
+                type="password"
+                placeholder="••••••••"
+                :disabled="isLoading"
+                :class="[
+                  'w-full rounded-xl border py-3 pl-12 pr-4 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary-500',
+                  errors.confirmPassword
+                    ? 'border-danger-300 bg-danger-50'
+                    : 'border-slate-200 bg-slate-50 hover:border-slate-300 focus:border-primary-300 focus:bg-white',
+                ]"
+              />
+            </div>
+            <p v-if="errors.confirmPassword" class="text-sm text-danger-600">
               {{ errors.confirmPassword }}
+            </p>
+          </div>
+
+          <div class="pt-2">
+            <label class="flex items-start gap-3">
+              <input
+                id="acceptTerms"
+                v-model="form.acceptTerms"
+                type="checkbox"
+                :disabled="isLoading"
+                class="mt-0.5 h-5 w-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span class="text-sm text-slate-600">
+                J'accepte les
+                <NuxtLink to="/terms" class="font-medium text-primary-600 hover:underline">
+                  conditions générales d'utilisation
+                </NuxtLink>
+                et la
+                <NuxtLink to="/privacy" class="font-medium text-primary-600 hover:underline">
+                  politique de confidentialité
+                </NuxtLink>
+              </span>
+            </label>
+            <p v-if="errors.acceptTerms" class="mt-1 text-sm text-danger-600">
+              {{ errors.acceptTerms }}
             </p>
           </div>
 
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+            class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-3.5 text-sm font-medium text-white shadow-lg shadow-primary-500/25 transition-all hover:bg-primary-700 hover:shadow-xl hover:shadow-primary-500/30 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span v-if="isLoading" class="flex items-center justify-center gap-2">
-              <span class="spinner spinner-sm" />
-              Création...
-            </span>
-            <span v-else>Créer mon compte</span>
+            <Spinner v-if="isLoading" size="sm" class="text-white" />
+            <span>{{ isLoading ? "Création en cours..." : "Créer mon compte" }}</span>
+            <Icon v-if="!isLoading" name="lucide:arrow-right" class="h-4 w-4" />
           </button>
         </form>
 
-        <div class="mt-6 text-center text-sm text-slate-500">
-          Déjà un compte ?
-          <NuxtLink to="/login" class="font-medium text-primary-600 hover:text-primary-500">
-            Se connecter
+        <div class="mt-6 text-center">
+          <p class="text-sm text-slate-600">
+            Déjà un compte ?
+            <NuxtLink to="/login" class="font-semibold text-primary-600 hover:text-primary-700">
+              Se connecter
+            </NuxtLink>
+          </p>
+        </div>
+
+        <!-- Mobile Back Link -->
+        <div class="mt-6 text-center lg:hidden">
+          <NuxtLink
+            to="/"
+            class="inline-flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-slate-900"
+          >
+            <Icon name="lucide:arrow-left" class="h-4 w-4" />
+            Retour à l'accueil
           </NuxtLink>
         </div>
       </div>

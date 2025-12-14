@@ -9,6 +9,7 @@ export const users = mysqlTable("users", {
   lastName: varchar("last_name", { length: 100 }),
   role: mysqlEnum("role", ["admin", "viewer"]).default("viewer"),
   isActive: boolean("is_active").default(true),
+  acceptedTermsAt: datetime("accepted_terms_at"),
   lastLoginAt: datetime("last_login_at"),
   createdAt: datetime("created_at").default(new Date()),
   updatedAt: datetime("updated_at").default(new Date()),

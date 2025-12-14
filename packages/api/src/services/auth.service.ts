@@ -1,4 +1,7 @@
 import { sign } from "hono/jwt";
+import { eq, sql, inArray } from "drizzle-orm";
+import { db } from "../db";
+import { tournamentSubscriptions, tournaments, matches } from "../db/schema";
 import { userRepository } from "../repositories";
 import { hashPassword, verifyPassword } from "../utils/crypto";
 import { JWT_SECRET, JWT_EXPIRES_IN } from "../middleware/auth";
@@ -9,6 +12,7 @@ export interface RegisterData {
   username: string;
   firstName?: string;
   lastName?: string;
+  acceptTerms: boolean;
 }
 
 export interface LoginData {
@@ -48,6 +52,28 @@ export type AuthError =
   | { code: "INVALID_PASSWORD"; message: string }
   | { code: "USER_NOT_FOUND"; message: string };
 
+export interface UserStats {
+  subscriptions: {
+    total: number;
+    byStatus: {
+      draft: number;
+      registration: number;
+      in_progress: number;
+      completed: number;
+      cancelled: number;
+    };
+  };
+  matches: {
+    upcoming: number;
+    completed: number;
+    total: number;
+  };
+  account: {
+    memberSince: Date | null;
+    lastLogin: Date | null;
+  };
+}
+
 export const authService = {
   async register(data: RegisterData): Promise<AuthResult | { error: AuthError }> {
     const existingUser = await userRepository.findByEmailOrUsername(data.email, data.username);
@@ -74,6 +100,7 @@ export const authService = {
       lastName: data.lastName || null,
       role: "viewer",
       isActive: true,
+      acceptedTermsAt: data.acceptTerms ? now : null,
       createdAt: now,
       updatedAt: now,
     });
@@ -200,5 +227,84 @@ export const authService = {
       },
       JWT_SECRET
     );
+  },
+
+  async getUserStats(userId: string): Promise<UserStats | { error: AuthError }> {
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+      return { error: { code: "USER_NOT_FOUND", message: "User not found" } };
+    }
+
+    // Get user's subscribed tournament IDs
+    const userSubscriptions = await db
+      .select({
+        tournamentId: tournamentSubscriptions.tournamentId,
+      })
+      .from(tournamentSubscriptions)
+      .where(eq(tournamentSubscriptions.userId, userId));
+
+    const subscribedTournamentIds = userSubscriptions.map((s) => s.tournamentId);
+
+    // Get tournament status counts
+    const statusCounts = {
+      draft: 0,
+      registration: 0,
+      in_progress: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+
+    if (subscribedTournamentIds.length > 0) {
+      const tournamentStats = await db
+        .select({
+          status: tournaments.status,
+          count: sql<number>`count(*)`,
+        })
+        .from(tournaments)
+        .where(inArray(tournaments.id, subscribedTournamentIds))
+        .groupBy(tournaments.status);
+
+      for (const stat of tournamentStats) {
+        const status = (stat.status ?? "draft") as keyof typeof statusCounts;
+        statusCounts[status] = Number(stat.count);
+      }
+    }
+
+    // Get match stats for subscribed tournaments
+    let matchStats = { upcoming: 0, completed: 0, total: 0 };
+
+    if (subscribedTournamentIds.length > 0) {
+      const matchCounts = await db
+        .select({
+          status: matches.status,
+          count: sql<number>`count(*)`,
+        })
+        .from(matches)
+        .where(inArray(matches.tournamentId, subscribedTournamentIds))
+        .groupBy(matches.status);
+
+      for (const stat of matchCounts) {
+        const count = Number(stat.count);
+        matchStats.total += count;
+        if (stat.status === "completed") {
+          matchStats.completed += count;
+        } else if (stat.status === "scheduled" || stat.status === "in_progress") {
+          matchStats.upcoming += count;
+        }
+      }
+    }
+
+    return {
+      subscriptions: {
+        total: subscribedTournamentIds.length,
+        byStatus: statusCounts,
+      },
+      matches: matchStats,
+      account: {
+        memberSince: user.createdAt,
+        lastLogin: user.lastLoginAt,
+      },
+    };
   },
 };
