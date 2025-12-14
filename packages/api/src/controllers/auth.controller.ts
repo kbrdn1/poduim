@@ -66,3 +66,14 @@ authController.post("/refresh", authMiddleware, async (c) => {
   const result = await authService.refreshToken(user.id, user.email, user.role);
   return c.json({ success: true, data: result });
 });
+
+authController.get("/stats", authMiddleware, async (c) => {
+  const user = c.get("user") as AuthUser;
+  const result = await authService.getUserStats(user.id);
+
+  if ("error" in result) {
+    return c.json({ success: false, error: result.error }, 404);
+  }
+
+  return c.json({ success: true, data: result });
+});
