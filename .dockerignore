@@ -1,0 +1,41 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+**/dist
+.nuxt
+**/.nuxt
+.output
+**/.output
+
+# Environment files (use .env.docker.local in container)
+.env
+.env.local
+!.env.docker.local
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage
+
+# Docker
+Dockerfile*
+docker-compose*.yml

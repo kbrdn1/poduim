@@ -2,19 +2,25 @@ FROM oven/bun:1-alpine
 
 WORKDIR /app
 
-# Install dependencies first (better caching)
+# Copy workspace structure
 COPY package.json bun.lock* ./
 COPY packages/api/package.json ./packages/api/
 COPY packages/shared/package.json ./packages/shared/
 
+# Install all dependencies
 RUN bun install
 
 # Copy source code
 COPY packages/shared ./packages/shared
 COPY packages/api ./packages/api
 
-WORKDIR /app/packages/api
+# Change ownership to bun user (exists in base image)
+RUN chown -R bun:bun /app
 
-EXPOSE 3333
+USER bun
 
-CMD ["bun", "dev"]
+EXPOSE 3000
+
+# Run dev from root directory using --cwd flag
+WORKDIR /app
+CMD ["sh", "-c", "cd /app && bun run --env-file packages/api/.env --watch packages/api/src/index.ts"]
