@@ -19,12 +19,12 @@ dev: ## Start all services locally (API + Web)
 	@echo "Starting Poduim..."
 	@make -j2 dev-api dev-web
 
-dev-api: ## Start API server locally (port 3333)
-	@echo "Starting API on port 3333..."
+dev-api: ## Start API server locally (port 3000)
+	@echo "Starting API on port 3000..."
 	cd packages/api && bun dev
 
-dev-web: ## Start Web server locally (port 3000)
-	@echo "Starting Web on port 3000..."
+dev-web: ## Start Web server locally (port 3001)
+	@echo "Starting Web on port 3001..."
 	cd packages/web && bun dev
 
 # ============================================
@@ -37,8 +37,8 @@ docker-dev: ## Start all services in Docker (MySQL + API + Web)
 	@echo ""
 	@echo "Services started:"
 	@echo "  - MySQL: localhost:3306"
-	@echo "  - API:   http://localhost:3333"
-	@echo "  - Web:   http://localhost:3000"
+	@echo "  - API:   http://localhost:3000"
+	@echo "  - Web:   http://localhost:3001"
 
 docker-stop: ## Stop all Docker services
 	@echo "Stopping all services..."

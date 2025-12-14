@@ -8,16 +8,15 @@ dist/
 .output/
 .nuxt/
 
-# Environment files (keep templates)
+# Environment files (keep examples only)
 .env
 .env.local
 .env.*.local
+*.env.docker.local
 !.env.example
-!.env.docker.local
+!.env.*.example
 !packages/api/.env.local
-!packages/api/.env.docker.local
 !packages/web/.env.local
-!packages/web/.env.docker.local
 
 # Logs
 logs/
