@@ -1,3 +1,7 @@
+import type { TeamRanking } from "../types/tournament";
+
+export type { TeamRanking };
+
 export interface RankingTeam {
   id: string;
   name: string;
@@ -11,19 +15,6 @@ export interface RankingMatch {
   homeScore: number | null;
   awayScore: number | null;
   status: string | null;
-}
-
-export interface TeamRanking {
-  teamId: string;
-  teamName: string;
-  played: number;
-  won: number;
-  drawn: number;
-  lost: number;
-  goalsFor: number;
-  goalsAgainst: number;
-  goalDifference: number;
-  points: number;
 }
 
 export function calculateRanking(teams: RankingTeam[], matches: RankingMatch[]): TeamRanking[] {
