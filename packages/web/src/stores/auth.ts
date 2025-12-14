@@ -1,16 +1,8 @@
 import { defineStore } from "pinia";
-
-export interface User {
-  id: string;
-  email: string;
-  username: string;
-  firstName: string | null;
-  lastName: string | null;
-  role: "admin" | "viewer";
-}
+import type { AuthUser } from "@poduim/shared/types";
 
 export interface AuthState {
-  user: User | null;
+  user: AuthUser | null;
   token: string | null;
   isLoading: boolean;
 }
@@ -38,7 +30,7 @@ export const useAuthStore = defineStore("auth", {
   },
 
   actions: {
-    setAuth(user: User, token: string) {
+    setAuth(user: AuthUser, token: string) {
       this.user = user;
       this.token = token;
       if (import.meta.client) {
@@ -72,7 +64,7 @@ export const useAuthStore = defineStore("auth", {
         const { auth } = useAuthApi();
         const response = await auth.me();
 
-        if (response.success) {
+        if (response.success && response.data) {
           this.user = response.data.user;
         } else {
           this.clearAuth();
@@ -88,7 +80,7 @@ export const useAuthStore = defineStore("auth", {
       const { auth } = useAuthApi();
       const response = await auth.login({ email, password });
 
-      if (response.success) {
+      if (response.success && response.data) {
         this.setAuth(response.data.user, response.data.token);
       }
 
@@ -101,11 +93,12 @@ export const useAuthStore = defineStore("auth", {
       username: string;
       firstName?: string;
       lastName?: string;
+      acceptTerms: boolean;
     }) {
       const { auth } = useAuthApi();
       const response = await auth.register(data);
 
-      if (response.success) {
+      if (response.success && response.data) {
         this.setAuth(response.data.user, response.data.token);
       }
 
