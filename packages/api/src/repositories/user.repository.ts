@@ -38,6 +38,7 @@ export const userRepository = {
         role: users.role,
         isActive: users.isActive,
         lastLoginAt: users.lastLoginAt,
+        acceptedTermsAt: users.acceptedTermsAt,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -107,6 +108,7 @@ export const userRepository = {
           role: users.role,
           isActive: users.isActive,
           lastLoginAt: users.lastLoginAt,
+          acceptedTermsAt: users.acceptedTermsAt,
           createdAt: users.createdAt,
           updatedAt: users.updatedAt,
         })

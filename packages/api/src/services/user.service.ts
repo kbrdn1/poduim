@@ -77,6 +77,7 @@ export const userService = {
       role: data.role,
       isActive: true,
       lastLoginAt: null,
+      acceptedTermsAt: null,
       createdAt: now,
       updatedAt: now,
     };
