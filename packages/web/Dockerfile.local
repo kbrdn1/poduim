@@ -1,0 +1,26 @@
+FROM oven/bun:1-alpine
+
+WORKDIR /app
+
+# Copy workspace structure
+COPY package.json bun.lock* ./
+COPY packages/web/package.json ./packages/web/
+COPY packages/shared/package.json ./packages/shared/
+
+# Install all dependencies
+RUN bun install
+
+# Copy source code
+COPY packages/shared ./packages/shared
+COPY packages/web ./packages/web
+
+# Change ownership to bun user (exists in base image)
+RUN chown -R bun:bun /app
+
+USER bun
+
+EXPOSE 3001
+
+# Run dev from root directory
+WORKDIR /app/packages/web
+CMD ["bun", "run", "nuxt", "dev", "--host", "--port", "3001"]
